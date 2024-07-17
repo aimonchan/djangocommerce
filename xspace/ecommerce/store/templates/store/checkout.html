@@ -6,29 +6,38 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- Panel 1: User Details -->
       <div class="bg-white rounded-lg shadow-md p-4">
-        <h2 class="text-xl font-semibold mb-4">User Details</h2>
-        <form id="form">
-            <div class="mb-4">
-                <input required class="w-full p-2 border rounded" type="text" name="name" placeholder="Name..">
+        <div id="form-wrapper">
+          <h2 class="text-xl font-semibold mb-4">User Details</h2>
+          <form id="form">
+            <div id="user-info">
+              <div class="mb-4">
+                  <input required class="w-full p-2 border rounded" type="text" name="name" placeholder="Name..">
+              </div>
+              <div class="mb-4">
+                  <input required class="w-full p-2 border rounded" type="email" name="email" placeholder="Email..">
+              </div>
             </div>
-            <div class="mb-4">
-                <input required class="w-full p-2 border rounded" type="email" name="email" placeholder="Email..">
-            </div>
-    
-            <div class="mt-4">
-                <hr class="my-2">
-                <p class="font-semibold">Shipping Information:</p>
-                <hr class="my-2">
-                <input class="w-full p-2 border rounded" type="text" name="address" placeholder="Address..">
-                <input class="w-full p-2 border rounded" type="text" name="city" placeholder="City..">
-                <input class="w-full p-2 border rounded" type="text" name="state" placeholder="State..">
-                <input class="w-full p-2 border rounded" type="text" name="zipcode" placeholder="Zip code..">
-                <input class="w-full p-2 border rounded" type="text" name="country" placeholder="Country..">
-            </div>
-    
-            <hr class="my-4">
-            <input id="form-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full" type="submit" value="Continue">
-        </form>
+      
+              <div class="mt-4" id="shipping-info">
+                  <hr class="my-2">
+                  <p class="font-semibold">Shipping Information:</p>
+                  <hr class="my-2">
+                  <input class="w-full p-2 border rounded" type="text" name="address" placeholder="Address..">
+                  <input class="w-full p-2 border rounded" type="text" name="city" placeholder="City..">
+                  <input class="w-full p-2 border rounded" type="text" name="state" placeholder="State..">
+                  <input class="w-full p-2 border rounded" type="text" name="zipcode" placeholder="Zip code..">
+                  <input class="w-full p-2 border rounded" type="text" name="country" placeholder="Country..">
+              </div>
+      
+              <hr class="my-4">
+              <input id="form-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full" type="submit" value="Continue">
+            </form>
+        </div>
+        
+          <div class="box-element hidden" id="payment-info">
+            <p class="font-semibold">Payment Information:</p>
+            <button id="make-payment">Make payment</button>
+        </div>
     </div>
     
       <!-- Panel 2: Order Summary -->
@@ -42,17 +51,29 @@
            </div>
         
             <!-- Product-->
+            <!-- Product 1 -->
             {% for item in items %}
             <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-4">
-                    <img src="{{item.product.imageURL}}" alt="Product 1" class="w-16 h-16 rounded-md">
-                    <div>
-                        <p class="font-semibold">{{item.product.name}}</p>
-                        <p class="text-gray-600">Price: ${{item.product.price|floatformat:2}}</p>
-                        <p class="text-gray-600">Total: ${{item.get_total|floatformat:2}}</p>
-                    </div>
+              <div class="flex items-center space-x-4">
+                <img src="{{item.product.imageURL}}" alt="Product 1" class="w-16 h-16 rounded-md">
+            
+                <div style="flex:1">
+                  <p class="font-semibold">{{item.product.name}}</p>
+                  <p class="text-gray-600">Price: ${{item.product.price|floatformat:2}}</p>
+                  <p class="text-gray-600">Total: ${{item.get_total|floatformat:2}}</p>
                 </div>
-                <input type="number" class="w-12 text-center border rounded-md" value="{{item.quantity}}">
+            
+            
+              </div>
+              <div>
+                <p class="quantity mb-4">{{item.quantity}}</p>
+                <!-- <div class="quantity">
+                  <img src="{% static 'images/up-arrow.svg' %}" data-product="{{item.product.id}}" data-action="add"
+                    class="chg-quantity update-cart">
+                  <img src="{% static 'images/down-arrow.svg' %}" data-product="{{item.product.id}}" data-action="remove"
+                    class="chg-quantity update-cart">
+                </div> -->
+              </div>
             </div>
             {% endfor %}
   
@@ -69,5 +90,86 @@
             </div>
   </div>
 </div>
+
+<script type="text/javascript">
+  var shipping = '{{order.shipping}}'
+  var total= '{{order.get_cart_total|floatformat:2}}'
+  if(shipping == 'False'){
+    document.getElementById('shipping-info').innerHTML= ''
+  }
+  // hiding the user input field start
+  var user = user //Problem still having
+  if(user != 'AnonymousUser'){
+    document.getElementById('user-info').innerHTML= ''
+  }
+  if(shipping == 'False' && user != 'AnonymousUser'){
+    //Hide entire form if user is logged in and shipping is false
+    document.getElementById('form-wrapper').classList.add("hidden");
+    //show payment if logged in user wants to buy an item that does not require shipping
+    document.getElementById('payment-info').classList.remove("hidden");
+  }
+  // hiding the user input field end
+
+  var form = document.getElementById('form')
+  form.addEventListener('submit', function(e){
+    e.preventDefault()
+    console.log('Form Submitted...')
+    document.getElementById('form-button').classList.add("hidden");
+    document.getElementById('payment-info').classList.remove("hidden");
+  })
+
+  document.getElementById('make-payment').addEventListener('click', function(e){
+    submitFormData()
+  })
+  function submitFormData(){
+    console.log('Payment button clicked')
+
+    var userFormData= {
+      'name':null,
+      'email':null,
+      'total':total,
+    } 
+
+    var shippingInfo= {
+      'address':null,
+      'city':null,
+      'state':null,
+      'zipcode':null,
+    }
+    if(shipping != 'False'){
+      shippingInfo.address = form.address.value
+      shippingInfo.city = form.city.value
+      shippingInfo.state = form.state.value
+      shippingInfo.zipcode = form.zipcode.value
+    }
+
+    if(user == 'AnonymousUser'){
+      userFormData.name = form.name.value
+      userFormData.email = form.email.value
+    }
+
+
+    var url = "/process_order/"
+    fetch(url, {
+      method: 'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-CSRFToken': csrftoken,
+      },
+      body: JSON.stringify({'form': userFormData, 'shipping': shippingInfo}),
+    })
+    .then((response)=> response.json())
+    .then((data)=>{
+      console.log('Success:', data );
+      alert('Transaction completed');
+      window.location.href= "{% url 'store' %}"
+    })
+  }
+
+
+
+
+
+</script>
 
 {% endblock content %}

@@ -20,13 +20,22 @@
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-4">
                   <img src="{{item.product.imageURL}}" alt="Product 1" class="w-16 h-16 rounded-md">
-                  <div>
+                  
+                  <div style="flex:1">
                     <p class="font-semibold">{{item.product.name}}</p>
                     <p class="text-gray-600">Price: ${{item.product.price|floatformat:2}}</p>
                     <p class="text-gray-600">Total: ${{item.get_total|floatformat:2}}</p>
                   </div>
+
+                  
                 </div>
-                <input type="number" class="w-12 text-center border rounded-md" value="{{item.quantity}}">
+                <div>
+                  <p class="quantity">{{item.quantity}}</p>
+                  <div class="quantity">
+                    <img src="{% static 'images/up-arrow.svg' %}" data-product="{{item.product.id}}" data-action="add" class="chg-quantity update-cart">
+                    <img src="{% static 'images/down-arrow.svg' %}" data-product="{{item.product.id}}" data-action="remove" class="chg-quantity update-cart">
+                  </div>
+                </div>
               </div>
               {% endfor %}
         
