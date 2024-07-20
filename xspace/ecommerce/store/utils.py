@@ -13,7 +13,7 @@ def cookieCart(request):
         cartItems= order['get_cart_items']
 
         for i in cart:
-                # We use try block to prevent items in cart that may have been removed from
+                #Not to get errors when a product removed from database, We use try block to prevent items in cart that may have been removed from
             try:
                 cartItems += cart[i]['quantity']
 
@@ -27,7 +27,7 @@ def cookieCart(request):
                         'id': product.id,
                         'name': product.name,
                         'price': product.price,
-                        'imageURL': product.imageURL
+                        'imageURL': product.imageURL,
                     },
                     'quantity': cart[i]['quantity'],
                     'get_total': total,
@@ -39,3 +39,45 @@ def cookieCart(request):
             except:
                 pass
         return{'cartItems': cartItems, 'order': order, 'items': items}
+
+def cartData(request):
+    user = request.user #set user to authenticated user or AnonymousUser 
+    if request.user.is_authenticated:
+        customer= request.user.customer
+        order, created= Order.objects.get_or_create(customer=customer, complete=False)
+        items= order.orderitem_set.all()
+        cartItems = order.get_cart_items
+    else:
+        cookieData = cookieCart(request)
+        cartItems = cookieData['cartItems']
+        order = cookieData['order']
+        items = cookieData['items']
+    return{'cartItems': cartItems, 'order': order, 'items': items, 'user': user}
+
+def guestOrder(request, data):
+    
+    name = data['form']['name']
+    email = data['form']['email']
+
+    cookieData = cookieCart(request)
+    items = cookieData['items']
+
+    customer, created = Customer.objects.get_or_create(
+        email= email,
+    )
+    customer.name = name
+    customer.save()
+
+    order = Order.objects.create(
+        customer=customer,
+        complete=False,
+    )
+
+    for item in items:
+        product = Product.objects.get(id=item['product']['id'])
+        orderItem = OrderItem.objects.create(
+            product = product,
+            order = order,
+            quantity = item['quantity'],
+        )
+    return customer, order
